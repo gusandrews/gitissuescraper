@@ -13,6 +13,7 @@
 import urllib2
 import json
 import base64
+import csv
 
 
 def getJsonWithAuth(url):
@@ -32,14 +33,19 @@ issuesURL = "https://api.github.com/repos/cryptocat/cryptocat/issues?per_page=10
 
 data = getJsonWithAuth(issuesURL)
 
-for issue in data:
-	print issue['body']
-	print issue['comments_url']
-	commentsURL = issue['comments_url']
 
-	commentsdata = getJsonWithAuth(commentsURL)	
+with open("cryptocat_cryptocat.csv", "wb") as csv_file:
+	writer = csv.writer(csv_file, delimiter=',')
+	writer.writerow(["title", "text", "url", "tags"])
+	for issue in data:
+		body = issue['body']
+		title = issue['title']
+		commentsURL = issue['comments_url']
+		commentsdata = getJsonWithAuth(commentsURL)	
 	
-	for comment in commentsdata:
-		print "OHAI COMMENT"
-		print comment['body']
+		for comment in commentsdata:
+			body = body+"\n"+comment['body']
 
+		labelNames = ','.join(x['name'] for x in issue['labels'])	
+		row = [unicode(title).encode("utf-8"), unicode(body).encode("utf-8"), issue['url'], labelNames]
+		writer.writerow(row)
