@@ -27,25 +27,41 @@ def getJsonWithAuth(url):
 	result = urllib2.urlopen(request)
 	return json.load(result)
 	
+
+def getContent(owner,repo):
 	
-issuesURL = "https://api.github.com/repos/cryptocat/cryptocat/issues?per_page=100"
-# Note we may need to go back and iterate over pages in order to get >100 issues
+	issuesURL = "https://api.github.com/repos/"+owner+"/"+repo+"/issues?per_page=100"
+	# Note we may need to go back and iterate over pages in order to get >100 issues
 
-data = getJsonWithAuth(issuesURL)
+	print "Now scraping "+issuesURL+"..."
+
+	data = getJsonWithAuth(issuesURL)
 
 
-with open("cryptocat_cryptocat.csv", "wb") as csv_file:
-	writer = csv.writer(csv_file, delimiter=',')
-	writer.writerow(["title", "text", "url", "tags"])
-	for issue in data:
-		body = issue['body']
-		title = issue['title']
-		commentsURL = issue['comments_url']
-		commentsdata = getJsonWithAuth(commentsURL)	
+	with open(owner+"_"+repo+".csv", "wb") as csv_file:
+		writer = csv.writer(csv_file, delimiter=',')
+		writer.writerow(["title", "text", "url", "tags"])
+		for issue in data:
+			body = issue['body']
+			title = issue['title']
+			commentsURL = issue['comments_url']
+			commentsdata = getJsonWithAuth(commentsURL)	
 	
-		for comment in commentsdata:
-			body = body+"\n"+comment['body']
+			for comment in commentsdata:
+				body = body+"\n"+comment['body']
 
-		labelNames = ','.join(x['name'] for x in issue['labels'])	
-		row = [unicode(title).encode("utf-8"), unicode(body).encode("utf-8"), issue['url'], labelNames]
-		writer.writerow(row)
+			labelNames = ','.join(x['name'] for x in issue['labels'])	
+			row = [unicode(title).encode("utf-8"), unicode(body).encode("utf-8"), issue['url'], labelNames]
+			writer.writerow(row)
+
+allProjects = [
+	[ "cryptocat", ["cryptocat","cryptocat-ios","cryptocat-android"]],
+	[ "servalproject", ["batphone"]]
+]	
+
+for project in allProjects:
+	owner = project[0]
+	repos = project[1]
+	for repo in repos:
+		getContent(owner,repo)
+		
