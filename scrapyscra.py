@@ -17,8 +17,8 @@ import csv
 
 
 def getJsonWithAuth(url):
-	username = 'gusandrews'
-	password = '0mglaz0rb33mzp3wp3wp3w'
+	username = ''
+	password = ''
 	
 	request = urllib2.Request(url)
 	base64string = base64.encodestring('%s:%s' % (username, password)).replace('\n', '')
