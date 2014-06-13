@@ -17,8 +17,8 @@ import csv
 
 
 def getJsonWithAuth(url):
-	username = ''
-	password = ''
+	username = 'gusandrews'
+	password = '0mglaz0rb33mzp3wp3wp3w'
 	
 	request = urllib2.Request(url)
 	base64string = base64.encodestring('%s:%s' % (username, password)).replace('\n', '')
@@ -56,7 +56,16 @@ def getContent(owner,repo):
 
 allProjects = [
 	[ "cryptocat", ["cryptocat","cryptocat-ios","cryptocat-android"]],
-	[ "servalproject", ["batphone"]]
+	[ "servalproject", ["batphone"]],
+	[ "chrisballinger", ["ChatSecure-iOS"]],
+	[ "getlantern", ["www.getlantern.org", "lantern"]],
+	[ "toberndo", ["mailvelope"]],
+	[ "jitsi", ["jitsi-meet"]],
+	[ "glamrock", ["cupcake"]],
+	[ "benetech", ["martus-android"]],
+	[ "byzantium", ["byzantium"]],
+	[ "opentechinstitute", ["commotion-router","commotion-docs","luci-theme-commotion","commotiond","commotion-client"]],
+	[ "WhisperSystems", ["TextSecure", "TextSecure-Browser", "TextSecure-iOS", "RedPhone"]]
 ]	
 
 for project in allProjects:
