@@ -17,42 +17,56 @@ import csv
 
 
 def getJsonWithAuth(url):
-	username = ''
+	username = 'gusandrews'
 	password = ''
-	
+
 	request = urllib2.Request(url)
 	base64string = base64.encodestring('%s:%s' % (username, password)).replace('\n', '')
-	request.add_header("Authorization", "Basic %s" % base64string) 
+	request.add_header("Authorization", "Basic %s" % base64string)
 
 	result = urllib2.urlopen(request)
 	return json.load(result)
-	
+
+def buildURL(owner,repo,pageOffset):
+
+	if pageOffset == 0:
+		issuesURL = "https://api.github.com/repos/"+owner+"/"+repo+"/issues?per_page=100"
+		return issuesURL
+	else:
+		issuesURL = "https://api.github.com/repos/"+owner+"/"+repo+"/issues?page="+str(pageOffset)+"&per_page=100"
+		return issuesURL
 
 def getContent(owner,repo):
-	
-	issuesURL = "https://api.github.com/repos/"+owner+"/"+repo+"/issues?per_page=100"
-	# Note we may need to go back and iterate over pages in order to get >100 issues
+
+	pageOffset = 0
+	issuesURL = buildURL(owner,repo,pageOffset)
+	data = getJsonWithAuth(issuesURL)
 
 	print "Now scraping "+issuesURL+"..."
 
-	data = getJsonWithAuth(issuesURL)
-
-
 	with open(owner+"_"+repo+".csv", "wb") as csv_file:
 		writer = csv.writer(csv_file, delimiter=',')
-		writer.writerow(["title", "text", "url", "tags"])
-		for issue in data:
-			body = issue['body']
-			title = issue['title']
-			commentsURL = issue['comments_url']
-			commentsdata = getJsonWithAuth(commentsURL)	
-	
-			for comment in commentsdata:
-				body = body+"\n"+comment['body']
+#		writer.writerow(["title", "text", "url", "tags"])
 
-			labelNames = ','.join(x['name'] for x in issue['labels'])	
-			row = [unicode(title).encode("utf-8"), unicode(body).encode("utf-8"), issue['url'], labelNames]
-			writer.writerow(row)
+		while len(data) != 0:
+
+			for issue in data:
+				body = issue['body']
+				title = issue['title']
+				commentsURL = issue['comments_url']
+				commentsdata = getJsonWithAuth(commentsURL)
+
+				for comment in commentsdata:
+					body = body+"\n"+comment['body']
+
+				labelNames = ','.join(x['name'] for x in issue['labels'])
+				labelNames = labelNames+','+owner+','+repo
+				row = [unicode(title).encode("utf-8"), unicode(body).encode("utf-8"), issue['url'], labelNames]
+				writer.writerow(row)
+
+			pageOffset=pageOffset+1
+			issuesURL = buildURL(owner,repo,pageOffset)
+			data = getJsonWithAuth(issuesURL)
 
 allProjects = [
 	[ "cryptocat", ["cryptocat","cryptocat-ios","cryptocat-android"]],
@@ -66,11 +80,10 @@ allProjects = [
 	[ "byzantium", ["byzantium"]],
 	[ "opentechinstitute", ["commotion-router","commotion-docs","luci-theme-commotion","commotiond","commotion-client"]],
 	[ "WhisperSystems", ["TextSecure", "TextSecure-Browser", "TextSecure-iOS", "RedPhone"]]
-]	
+]
 
 for project in allProjects:
 	owner = project[0]
 	repos = project[1]
 	for repo in repos:
 		getContent(owner,repo)
-		
