@@ -7,10 +7,6 @@ import json
 import base64
 import csv
 
-def getJsonWithAuth(url):
-	BEARER_TOKEN = ''
-	# this isn't done
-
 def getIssueList(baseURL,page):
 	response = urllib2.urlopen(baseURL + "?page=" + str(page))
 	data = json.load(response)
@@ -21,14 +17,15 @@ def getIssueContent(ticketURL):
 	data = json.load(response)
 	return data["ticket"]
 
-def getContent(projectName):
-	baseURL = "http://sourceforge.net/rest/p/" + projectName + "/bugs/"
+# scrape issues. Usually /bugs, but also /support-requests and /feature-requests use this format
+def getIssues(projectName, issueType):
+	baseURL = "http://sourceforge.net/rest/p/" + projectName + "/" + issueType
 	print "Retrieving " + baseURL + "..."
 
 	pageNum = 0 # sourceForge starts paging at 0
 	issues = getIssueList(baseURL,pageNum)
 
-	with open(projectName + ".csv", "wb") as csv_file:
+	with open(projectName + "-" + issueType + ".csv", "wb") as csv_file:
 		writer = csv.writer(csv_file, delimiter=',')
 		#writer.writerow(["title", "text", "url", "tags"])
 
@@ -37,7 +34,7 @@ def getContent(projectName):
 
 			for issue in issues:
 				ticketNumber = issue['ticket_num']
-				ticketURL = baseURL + str(ticketNumber)
+				ticketURL = baseURL + "/" + str(ticketNumber)
 				content = getIssueContent(ticketURL)
 
 				if content['status'] == "open":
@@ -45,12 +42,12 @@ def getContent(projectName):
 					body = content['description']
 					title = content['summary']
 					URL = ticketURL
-					tag = ','.join(content['labels'])
+					tag = ','.join(content['labels'] + [projectName, issueType])
 
 					# add each discussion post into the text of the issue
 					discussion = content['discussion_thread']['posts']
 					for post in discussion:
-						body = body+"\n-------\n"+post['text']
+						body = body+"\n---------------\n"+post['text']
 						#print post['text']
 
 					row = [unicode(title).encode("utf-8"), unicode(body).encode("utf-8"), URL, tag]
@@ -60,5 +57,54 @@ def getContent(projectName):
 			issues = getIssueList(baseURL,pageNum)
 
 
-getContent("keepass")
-getContent("enigmail")
+
+
+def getThreadList(baseURL,page):
+	response = urllib2.urlopen(baseURL + "?page=" + str(page))
+	data = json.load(response)
+	return data["forum"]["topics"]
+
+def getThreadContent(threadURL):
+	response = urllib2.urlopen(threadURL)
+	data = json.load(response)
+	return data["topic"]["posts"]
+
+# scrape all threads in a forum
+def getThreads(projectName, forumName):
+	baseURL = "http://sourceforge.net/rest/p/" + projectName + "/forum/" + forumName
+	print "Retrieving " + baseURL + "..."
+
+	pageNum = 0 # sourceForge starts paging at 0
+	threads = getThreadList(baseURL,pageNum)
+
+	with open(projectName + "-" + forumName + ".csv", "wb") as csv_file:
+		writer = csv.writer(csv_file, delimiter=',')
+		#writer.writerow(["title", "text", "url", "tags"])
+
+		# page loop
+		while len(threads) != 0:
+
+			for thread in threads:
+				threadID = thread['_id']
+				threadURL = baseURL + "/thread/" + str(threadID)
+				print "Found thread " + threadURL
+				content = getThreadContent(threadURL)
+
+				title = thread["subject"]
+				URL = threadURL
+				tag = ','.join([projectName, forumName])
+
+				# join all posts together
+				body = "\n---------------\n".join([x["text"] for x in content])
+
+				row = [unicode(title).encode("utf-8"), unicode(body).encode("utf-8"), URL, tag]
+				writer.writerow(row)
+
+			pageNum += 1
+			threads = getThreadList(baseURL,pageNum)
+
+getIssues("keepass", "bugs")
+getIssues("keepass", "support-requests")
+getIssues("keepass", "feature-requests")
+getIssues("enigmail", "bugs")
+getThreads("enigmail", "support")
