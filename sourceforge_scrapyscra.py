@@ -8,48 +8,57 @@ import base64
 import csv
 
 def getJsonWithAuth(url):
-BEARER_TOKEN = ''
-# this isn't done
+	BEARER_TOKEN = ''
+	# this isn't done
 
-def getIssueList(baseURL):
-response = urllib2.urlopen(baseURL)
-data = json.load(response)
-return data["tickets"]
+def getIssueList(baseURL,page):
+	response = urllib2.urlopen(baseURL + "?page=" + str(page))
+	data = json.load(response)
+	return data["tickets"]
 
 def getIssueContent(ticketURL):
-response = urllib2.urlopen(ticketURL)
-data = json.load(response)
-return data["ticket"]
+	response = urllib2.urlopen(ticketURL)
+	data = json.load(response)
+	return data["ticket"]
 
-def getContent(baseURL):
+def getContent(projectName):
+	baseURL = "http://sourceforge.net/rest/p/" + projectName + "/bugs/"
+	print "Retrieving " + baseURL + "..."
 
-issues = getIssueList(baseURL)
+	pageNum = 0 # sourceForge starts paging at 0
+	issues = getIssueList(baseURL,pageNum)
 
-with open("keepass.csv", "wb") as csv_file:
-writer = csv.writer(csv_file, delimiter=',')
-writer.writerow(["title", "text", "url", "tags"])
+	with open(projectName + ".csv", "wb") as csv_file:
+		writer = csv.writer(csv_file, delimiter=',')
+		#writer.writerow(["title", "text", "url", "tags"])
 
-for issue in issues:
-ticketNumber = issue['ticket_num']
-ticketURL = baseURL + str(ticketNumber)
+		# page loop
+		while len(issues) != 0:
 
-print "Now scraping..." + ticketURL
+			for issue in issues:
+				ticketNumber = issue['ticket_num']
+				ticketURL = baseURL + str(ticketNumber)
+				content = getIssueContent(ticketURL)
 
-content = getIssueContent(ticketURL)
+				if content['status'] == "open":
+					print "Found open issue " + ticketURL
+					body = content['description']
+					title = content['summary']
+					URL = ticketURL
+					tag = ','.join(content['labels'])
 
-body = content['description']
-title = content['summary']
-URL = ticketURL
-tag = ','.join(content['labels'])
+					# add each discussion post into the text of the issue
+					discussion = content['discussion_thread']['posts']
+					for post in discussion:
+						body = body+"\n-------\n"+post['text']
+						#print post['text']
 
-discussion = content['discussion_thread']['posts']
+					row = [unicode(title).encode("utf-8"), unicode(body).encode("utf-8"), URL, tag]
+					writer.writerow(row)
 
-for post in discussion:
-body = body+"\n"+post['text']
-print post['text']
-
-row = [unicode(title).encode("utf-8"), unicode(body).encode("utf-8"), URL, tag]
-writer.writerow(row)
+			pageNum += 1
+			issues = getIssueList(baseURL,pageNum)
 
 
-getContent("http://sourceforge.net/rest/p/keepass/bugs/")
+getContent("keepass")
+getContent("enigmail")
