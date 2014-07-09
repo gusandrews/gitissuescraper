@@ -1,4 +1,6 @@
 # Needs authentication for pagination probably. As of now it works though.
+# ADD the Enigmail tracker http://sourceforge.net/p/enigmail/bugs/
+# Also they have a forum! http://sourceforge.net/p/enigmail/forum/
 
 import urllib2
 import json
