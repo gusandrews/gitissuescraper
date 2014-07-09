@@ -1,14 +1,7 @@
-# For (URL of repo)
-# grab json
-# For (issues)
-# 	For (comments)
-#		Create comment string
-#		get comment number
-#				Get comment text for comment number
-#				Add to string
-#				get next comment
-# Write string
-
+# Github issue scraper. 
+# Saves each repo's issues as a CSV with columns text, title, URL, tags
+# tags are issue labels, plus repo and project names, comma separated
+# Hard-coded repo list below, no command line args
 
 import urllib2
 import json
@@ -27,22 +20,22 @@ def getJsonWithAuth(url):
 	result = urllib2.urlopen(request)
 	return json.load(result)
 
-def buildURL(owner,repo,pageOffset):
 
+def buildURL(owner,repo,pageOffset):
+	pageSize = 100
 	if pageOffset == 0:
-		issuesURL = "https://api.github.com/repos/"+owner+"/"+repo+"/issues?per_page=100"
+		issuesURL = "https://api.github.com/repos/"+owner+"/"+repo+"/issues?per_page=" + str(pageSize)
 		return issuesURL
 	else:
-		issuesURL = "https://api.github.com/repos/"+owner+"/"+repo+"/issues?page="+str(pageOffset)+"&per_page=100"
+		issuesURL = "https://api.github.com/repos/"+owner+"/"+repo+"/issues?page="+str(pageOffset)+"&per_page=" + str(pageSize)
 		return issuesURL
 
+
 def getContent(owner,repo):
-
-	pageOffset = 0
+	pageOffset = 1
 	issuesURL = buildURL(owner,repo,pageOffset)
-	data = getJsonWithAuth(issuesURL)
-
 	print "Now scraping "+issuesURL+"..."
+	data = getJsonWithAuth(issuesURL)
 
 	with open(owner+"_"+repo+".csv", "wb") as csv_file:
 		writer = csv.writer(csv_file, delimiter=',')
@@ -66,7 +59,9 @@ def getContent(owner,repo):
 
 			pageOffset=pageOffset+1
 			issuesURL = buildURL(owner,repo,pageOffset)
+			print "Now scraping "+issuesURL+"..."
 			data = getJsonWithAuth(issuesURL)
+
 
 allProjects = [
 	[ "cryptocat", ["cryptocat","cryptocat-ios","cryptocat-android"]],
@@ -78,7 +73,7 @@ allProjects = [
 	[ "glamrock", ["cupcake"]],
 	[ "benetech", ["martus-android"]],
 	[ "byzantium", ["byzantium"]],
-	[ "opentechinstitute", ["commotion-router","commotion-docs","luci-theme-commotion","commotiond","commotion-client"]],
+	[ "opentechinstitute", ["commotion-router","commotion-docs","luci-commotion","commotiond","commotion-client"]],
 	[ "WhisperSystems", ["TextSecure", "TextSecure-Browser", "TextSecure-iOS", "RedPhone"]]
 ]
 
