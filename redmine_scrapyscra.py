@@ -6,7 +6,7 @@ import csv
 
 
 def getIssues(baseURL,offset):
- 	issuesURL = baseURL + "?status_id=*?offset=" + str(offset) + "&limit=100"
+ 	issuesURL = baseURL + "?status_id=*&offset=" + str(offset) + "&limit=100"
 	response = urllib2.urlopen(issuesURL)
 	data = json.load(response)
 	return data["issues"]
