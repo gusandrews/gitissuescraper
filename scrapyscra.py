@@ -8,7 +8,6 @@ import json
 import base64
 import csv
 
-
 def getJsonWithAuth(url):
 	username = 'gusandrews'
 	password = ''
@@ -23,12 +22,22 @@ def getJsonWithAuth(url):
 
 def buildURL(owner,repo,pageOffset):
 	pageSize = 100
-	if pageOffset == 0:
-		issuesURL = "https://api.github.com/repos/"+owner+"/"+repo+"/issues?per_page=" + str(pageSize)
-		return issuesURL
-	else:
-		issuesURL = "https://api.github.com/repos/"+owner+"/"+repo+"/issues?page="+str(pageOffset)+"&per_page=" + str(pageSize)
-		return issuesURL
+	return "https://api.github.com/repos/"+owner+"/"+repo+"/issues?state=all&page="+str(pageOffset)+"&per_page="+str(pageSize)
+
+
+# keep only issues that are open or have been touched in last six months
+def keepThisIssue(issue):
+	if issue['state'] == open:
+		return true
+
+	from dateutil.parser import parse
+	keepSince = parse("2014-01-01T12:00UTC")
+	updatedAt = parse(issue['updated_at'])
+
+#	if updatedAt > keepSince:
+#		print "Keeping closed issue updated at " + issue['updated_at']
+
+	return updatedAt > keepSince
 
 
 def getContent(owner,repo):
@@ -44,18 +53,20 @@ def getContent(owner,repo):
 		while len(data) != 0:
 
 			for issue in data:
-				body = issue['body']
-				title = issue['title']
-				commentsURL = issue['comments_url']
-				commentsdata = getJsonWithAuth(commentsURL)
 
-				for comment in commentsdata:
-					body = body+"\n"+comment['body']
+				if keepThisIssue(issue):
+					body = issue['body']
+					title = issue['title']
+					commentsURL = issue['comments_url']
+					commentsdata = getJsonWithAuth(commentsURL)
 
-				labelNames = ','.join("label:"+x['name'] for x in issue['labels'])
-				labelNames = labelNames + ',' + "owner:"+owner + ',' + "repo:"+repo
-				row = [unicode(title).encode("utf-8"), unicode(body).encode("utf-8"), issue['url'], labelNames]
-				writer.writerow(row)
+					for comment in commentsdata:
+						body = body+"\n"+comment['body']
+
+					labelNames = ','.join("label:"+x['name'] for x in issue['labels'])
+					labelNames = labelNames + ',' + "owner:"+owner + ',' + "repo:"+repo
+					row = [unicode(title).encode("utf-8"), unicode(body).encode("utf-8"), issue['url'], labelNames]
+					writer.writerow(row)
 
 			pageOffset=pageOffset+1
 			issuesURL = buildURL(owner,repo,pageOffset)
@@ -65,17 +76,18 @@ def getContent(owner,repo):
 
 allProjects = [
 	[ "cryptocat", ["cryptocat","cryptocat-ios","cryptocat-android"]],
-#	[ "servalproject", ["batphone"]],
-#	[ "chrisballinger", ["ChatSecure-iOS"]],
-#	[ "getlantern", ["www.getlantern.org", "lantern"]],
-#	[ "toberndo", ["mailvelope"]],
-#	[ "jitsi", ["jitsi-meet"]],
-#	[ "glamrock", ["cupcake"]],
-#	[ "benetech", ["martus-android"]],
-#	[ "byzantium", ["byzantium"]],
-#	[ "opentechinstitute", ["commotion-router","commotion-docs","luci-commotion","commotiond","commotion-client"]],
-#	[ "WhisperSystems", ["TextSecure", "TextSecure-Browser", "TextSecure-iOS", "RedPhone"]]
+	[ "servalproject", ["batphone"]],
+	[ "chrisballinger", ["ChatSecure-iOS"]],
+	[ "getlantern", ["www.getlantern.org", "lantern"]],
+	[ "toberndo", ["mailvelope"]],
+	[ "jitsi", ["jitsi-meet"]],
+	[ "glamrock", ["cupcake"]],
+	[ "benetech", ["martus-android"]],
+	[ "byzantium", ["byzantium"]],
+	[ "opentechinstitute", ["commotion-router","commotion-docs","luci-commotion","commotiond","commotion-client"]],
+	[ "WhisperSystems", ["TextSecure", "TextSecure-Browser", "TextSecure-iOS", "RedPhone"]]
 ]
+
 
 for project in allProjects:
 	owner = project[0]
