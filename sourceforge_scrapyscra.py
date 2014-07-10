@@ -57,7 +57,7 @@ def getIssues(projectName, issueType):
 					title = unicode(content['summary'])
 					URL = ticketURL
 					tag = ','.join(["label:"+x for x in content['labels']] + 
-								   ["project:"+projectName, "postType:"+issueType + "status:"+content['status']])
+								   ["project:"+projectName, "postType:"+issueType, "status:"+content['status']])
 
 					# add each discussion post into the text of the issue
 					discussion = content['discussion_thread']['posts']
