@@ -42,7 +42,7 @@ def getIssues(projectName, issueType):
 					body = content['description']
 					title = content['summary']
 					URL = ticketURL
-					tag = ','.join(content['labels'] + [projectName, issueType])
+					tag = ','.join(["label:"+x for x in content['labels']] + ["project:"+projectName, "postType:"+issueType])
 
 					# add each discussion post into the text of the issue
 					discussion = content['discussion_thread']['posts']
@@ -92,7 +92,7 @@ def getThreads(projectName, forumName):
 
 				title = thread["subject"]
 				URL = threadURL
-				tag = ','.join([projectName, forumName])
+				tag = ','.join(["project:"+projectName, "postType:"+forumName])
 
 				# join all posts together
 				body = "\n---------------\n".join([x["text"] for x in content])
@@ -104,7 +104,8 @@ def getThreads(projectName, forumName):
 			threads = getThreadList(baseURL,pageNum)
 
 getIssues("keepass", "bugs")
-getIssues("keepass", "support-requests")
-getIssues("keepass", "feature-requests")
-getIssues("enigmail", "bugs")
-getThreads("enigmail", "support")
+#getIssues("keepass", "support-requests")
+#getIssues("keepass", "feature-requests")
+#getIssues("enigmail", "bugs")
+#getThreads("enigmail", "support")
+#getThreads("enigmail", "feature_requests")

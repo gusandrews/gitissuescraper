@@ -52,8 +52,8 @@ def getContent(owner,repo):
 				for comment in commentsdata:
 					body = body+"\n"+comment['body']
 
-				labelNames = ','.join(x['name'] for x in issue['labels'])
-				labelNames = labelNames+','+owner+','+repo
+				labelNames = ','.join("label:"+x['name'] for x in issue['labels'])
+				labelNames = labelNames + ',' + "owner:"+owner + ',' + "repo:"+repo
 				row = [unicode(title).encode("utf-8"), unicode(body).encode("utf-8"), issue['url'], labelNames]
 				writer.writerow(row)
 
@@ -65,16 +65,16 @@ def getContent(owner,repo):
 
 allProjects = [
 	[ "cryptocat", ["cryptocat","cryptocat-ios","cryptocat-android"]],
-	[ "servalproject", ["batphone"]],
-	[ "chrisballinger", ["ChatSecure-iOS"]],
-	[ "getlantern", ["www.getlantern.org", "lantern"]],
-	[ "toberndo", ["mailvelope"]],
-	[ "jitsi", ["jitsi-meet"]],
-	[ "glamrock", ["cupcake"]],
-	[ "benetech", ["martus-android"]],
-	[ "byzantium", ["byzantium"]],
-	[ "opentechinstitute", ["commotion-router","commotion-docs","luci-commotion","commotiond","commotion-client"]],
-	[ "WhisperSystems", ["TextSecure", "TextSecure-Browser", "TextSecure-iOS", "RedPhone"]]
+#	[ "servalproject", ["batphone"]],
+#	[ "chrisballinger", ["ChatSecure-iOS"]],
+#	[ "getlantern", ["www.getlantern.org", "lantern"]],
+#	[ "toberndo", ["mailvelope"]],
+#	[ "jitsi", ["jitsi-meet"]],
+#	[ "glamrock", ["cupcake"]],
+#	[ "benetech", ["martus-android"]],
+#	[ "byzantium", ["byzantium"]],
+#	[ "opentechinstitute", ["commotion-router","commotion-docs","luci-commotion","commotiond","commotion-client"]],
+#	[ "WhisperSystems", ["TextSecure", "TextSecure-Browser", "TextSecure-iOS", "RedPhone"]]
 ]
 
 for project in allProjects:

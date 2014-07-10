@@ -28,7 +28,7 @@ def getContent(baseURL):
 				body = issue['description']
 				title = issue['subject']
 				URL = "https://dev.guardianproject.info/issues/"+str(issue['id'])
-				tag = issue['tracker']['name']+','+issue['project']['name']
+				tag = "tracker:"+issue['tracker']['name'] + ',' + "project:"+issue['project']['name']
 
 				row = [unicode(title).encode("utf-8"), unicode(body).encode("utf-8"), URL, unicode(tag).encode("utf-8")]
 				writer.writerow(row)
