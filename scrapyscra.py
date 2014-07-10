@@ -27,15 +27,16 @@ def buildURL(owner,repo,pageOffset):
 
 # keep only issues that are open or have been touched in last six months
 def keepThisIssue(issue):
-	if issue['state'] == open:
-		return true
+	if issue['state'] == "open":
+		print "Keeping open issue"
+		return True
 
 	from dateutil.parser import parse
 	keepSince = parse("2014-01-01T12:00UTC")
 	updatedAt = parse(issue['updated_at'])
 
-#	if updatedAt > keepSince:
-#		print "Keeping closed issue updated at " + issue['updated_at']
+	if updatedAt > keepSince:
+		print "Keeping closed issue updated at " + issue['updated_at']
 
 	return updatedAt > keepSince
 
@@ -55,16 +56,17 @@ def getContent(owner,repo):
 			for issue in data:
 
 				if keepThisIssue(issue):
-					body = issue['body']
-					title = issue['title']
+					body = unicode(issue['body'])
+					title = unicode(issue['title'])
 					commentsURL = issue['comments_url']
 					commentsdata = getJsonWithAuth(commentsURL)
 
 					for comment in commentsdata:
-						body = body+"\n"+comment['body']
+						body = body+"\n"+unicode(comment['body'])
 
-					labelNames = ','.join("label:"+x['name'] for x in issue['labels'])
-					labelNames = labelNames + ',' + "owner:"+owner + ',' + "repo:"+repo
+					labelNames = ','.join(["label:"+x['name'] for x in issue['labels']] + 
+										  ["owner:"+owner, "repo:"+repo, "state:"+issue['state']])
+
 					row = [unicode(title).encode("utf-8"), unicode(body).encode("utf-8"), issue['url'], labelNames]
 					writer.writerow(row)
 

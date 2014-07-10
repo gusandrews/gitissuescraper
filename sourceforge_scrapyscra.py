@@ -17,6 +17,21 @@ def getIssueContent(ticketURL):
 	data = json.load(response)
 	return data["ticket"]
 
+# keep only issues that are open or have been touched in last six months
+def keepThisIssue(issue):
+	if issue['status'] == "open":
+		print "Keeping open issue"
+		return True
+
+	from dateutil.parser import parse
+	keepSince = parse("2014-01-01")
+	updatedAt = parse(issue['mod_date'])
+
+	if updatedAt > keepSince:
+		print "Keeping closed issue updated at " + issue['mod_date']
+
+	return updatedAt > keepSince
+
 # scrape issues. Usually /bugs, but also /support-requests and /feature-requests use this format
 def getIssues(projectName, issueType):
 	baseURL = "http://sourceforge.net/rest/p/" + projectName + "/" + issueType
@@ -37,12 +52,12 @@ def getIssues(projectName, issueType):
 				ticketURL = baseURL + "/" + str(ticketNumber)
 				content = getIssueContent(ticketURL)
 
-				if content['status'] == "open":
-					print "Found open issue " + ticketURL
-					body = content['description']
-					title = content['summary']
+				if keepThisIssue(content):
+					body = unicode(content['description'])
+					title = unicode(content['summary'])
 					URL = ticketURL
-					tag = ','.join(["label:"+x for x in content['labels']] + ["project:"+projectName, "postType:"+issueType])
+					tag = ','.join(["label:"+x for x in content['labels']] + 
+								   ["project:"+projectName, "postType:"+issueType + "status:"+content['status']])
 
 					# add each discussion post into the text of the issue
 					discussion = content['discussion_thread']['posts']
@@ -104,8 +119,8 @@ def getThreads(projectName, forumName):
 			threads = getThreadList(baseURL,pageNum)
 
 getIssues("keepass", "bugs")
-#getIssues("keepass", "support-requests")
-#getIssues("keepass", "feature-requests")
-#getIssues("enigmail", "bugs")
-#getThreads("enigmail", "support")
-#getThreads("enigmail", "feature_requests")
+getIssues("keepass", "support-requests")
+getIssues("keepass", "feature-requests")
+getIssues("enigmail", "bugs")
+getThreads("enigmail", "support")
+getThreads("enigmail", "feature_requests")
